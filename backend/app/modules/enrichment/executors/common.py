@@ -66,16 +66,23 @@ class SyncClient(Protocol):
 
 
 class SyncExaClient:
-    """Sync wrapper: ``asyncio.run`` per call (worker has no loop)."""
+    """Sync wrapper over the async ``ExaClient`` (worker has no loop).
+
+    A private loop is kept for the wrapper's lifetime rather than
+    ``asyncio.run`` per call: httpx's connection pool binds to the loop
+    that first serves it, so a fresh loop per call leaves pooled
+    connections stranded on a closed loop ("Event loop is closed").
+    """
 
     def __init__(self, client: "ExaClient") -> None:
         self._client = client
+        self._loop = asyncio.new_event_loop()
 
     def search(self, body: dict[str, Any], record: Any = None) -> ExaResponse:
-        return asyncio.run(self._client.search(body, record=record))
+        return self._loop.run_until_complete(self._client.search(body, record=record))
 
     def contents(self, body: dict[str, Any], record: Any = None) -> ExaResponse:
-        return asyncio.run(self._client.contents(body, record=record))
+        return self._loop.run_until_complete(self._client.contents(body, record=record))
 
 
 def now_utc() -> datetime:

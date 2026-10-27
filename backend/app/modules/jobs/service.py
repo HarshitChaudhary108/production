@@ -40,6 +40,7 @@ from app.modules.enrichment.models import EnrichmentRun
 from app.modules.jobs import events
 from app.modules.jobs.models import Job, JobItem
 from app.modules.providers.models import ProviderCall
+from app.modules.research.discover import DiscoverOutcome
 from app.modules.sheets import service as sheets
 
 log = get_logger("worker")
@@ -527,10 +528,79 @@ def _fail_job_provider_locked(
     settle_locked(s, job, force_status="failed")
 
 
+def _complete_discover_locked(
+    s: Session, item: JobItem, job: Job, outcome: DiscoverOutcome
+) -> str:
+    """HC-1 discover completion — the same P2 transaction as cell items
+    (job row locked, item fenced by status/lease, provider_calls, events,
+    NOTIFY). ``outcome`` is a ``research.discover.DiscoverOutcome``.
+
+    On provider failure the project returns to Draft (HC-D4) and the job
+    fails with the mapped provider code; on success the item is
+    succeeded/no_data, the project goes Complete, and the job settles
+    inline — the research ``done`` event carries the discover summary, not
+    the generic item-count summary."""
+    from app.modules.research import discover as research_discover
+
+    payload = item.payload or {}
+    for call in outcome.provider_calls:
+        s.add(
+            ProviderCall(
+                id=new_id("enr"),
+                job_id=job.id,
+                row_id=None,
+                provider=call.provider,
+                endpoint=call.endpoint,
+                status_code=call.status_code,
+                request_id=call.request_id,
+                cost_dollars=call.cost_dollars,
+                ms=call.ms,
+                tokens=call.tokens,
+                records_returned=call.records_returned,
+            )
+        )
+    if outcome.error is not None:
+        item.status = "done"
+        item.lease_until = None
+        item.result = {
+            "status": "failed",
+            "error": asdict(outcome.error),
+        }
+        research_discover.fail_project(s, payload)
+        _fail_job_provider_locked(
+            s, job, outcome.error.code, outcome.error.message
+        )
+        events.notify(s, job.id)
+        log.info(
+            "discover_failed job_id=%s code=%s", job.id, outcome.error.code
+        )
+        return "done"
+    summary, item_status = research_discover.apply(
+        s, item=item, job=job, outcome=outcome
+    )
+    item.status = "done"
+    item.lease_until = None
+    item.result = {"status": item_status, "summary": summary}
+    job.status = "succeeded"
+    job.result = {**(job.result or {}), "summary": summary}
+    events.append_event(
+        s,
+        job.id,
+        "done",
+        {"status": "succeeded", "summary": summary, "result": job.result},
+    )
+    s.flush()
+    events.notify(s, job.id)
+    log.info(
+        "discover_done job_id=%s companies=%s", job.id, summary["companies"]
+    )
+    return "done"
+
+
 def complete_item(
     s: Session,
     item_id: str,
-    result: ExecResult,
+    result: ExecResult | DiscoverOutcome,
     *,
     settings: Settings | None = None,
     executor_version: str | None = None,
@@ -551,6 +621,10 @@ def complete_item(
     if item.status != "running":
         return "skipped"
     job = _lock_job(s, item.job_id)
+    if item.kind == "discover":  # HC-1: dispatch by item kind
+        assert isinstance(result, DiscoverOutcome)
+        return _complete_discover_locked(s, item, job, result)
+    assert isinstance(result, ExecResult)
     column = sheets.get_column_by_id(s, item.column_id) if item.column_id else None
     payload = item.payload or {}
     cost = int(payload.get("cost") or 0) if result.status == "succeeded" else 0
@@ -687,6 +761,10 @@ def fail_item_final(s: Session, item: JobItem, job: Job) -> None:
     item.status = "done"
     item.lease_until = None
     item.result = {"status": "failed", "error": error}
+    if item.kind == "discover":  # HC-D4
+        from app.modules.research.discover import fail_project
+
+        fail_project(s, item.payload or {})
     progress = dict(job.progress or {})
     progress["done"] = int(progress.get("done") or 0) + 1
     job.progress = progress

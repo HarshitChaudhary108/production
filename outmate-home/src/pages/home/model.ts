@@ -1,5 +1,7 @@
 // @ts-nocheck — logic preserved verbatim from the design export.
 import { ModelBase } from '../../lib/model'
+import { apiGet, apiPost, jobEventsUrl } from '../../lib/api'
+import { doneText, failedText, previewText, runningText, statsFor, threadMeta } from './researchSession'
 
 const NAV = [
   ['', [['Home', 'M3.8 9L10 4l6.2 5v6.5h-4.4v-4h-3.6v4H3.8z']]],
@@ -295,8 +297,10 @@ export class HomeModel extends ModelBase {
     credits: 5000, used: 2370, toast: '', menuFor: null,
     q: '', statusFilter: 'All', sort: 'Last run', cat: 'All', researchFilter: 'All',
     connected: { HubSpot: true, Gmail: false, Slack: true, LinkedIn: false, MCP: false, 'Google Sheets': false },
-    thread: [], thinking: false, ctx: {}, visWin: 1,
+    thread: [], thinking: false, visWin: 1,
   }
+
+  _sources = new Set()
 
   stop = (e) => { if (e && e.stopPropagation) e.stopPropagation() }
   flash = (t) => {
@@ -308,86 +312,102 @@ export class HomeModel extends ModelBase {
     return Object.assign({ agentOpen: false, toolsOpen: false, workspaceOpen: false, notifsOpen: false, userOpen: false, menuFor: null }, x || {})
   }
 
+  _patch = (id, fields) => {
+    this.setState((st) => ({ thread: (st.thread || []).map((m) => (m.id === id ? Object.assign({}, m, fields) : m)) }))
+  }
+
+  _closeSources = () => {
+    for (const es of this._sources) { try { es.close() } catch { /* already closed */ } }
+    this._sources.clear()
+  }
+
+  dispose() {
+    this._closeSources()
+    super.dispose()
+  }
+
   ask = (q) => {
     const text = (q || '').trim()
     if (!text) { this.flash('Describe what you need first'); return }
-    this.clearTimeout(this._think)
-    this.setState((st) => ({ draft: '', thinking: true, thread: (st.thread || []).concat({ role: 'user', text }) }))
-    this._think = this.setTimeout(() => this.setState((st) => {
-      const plan = this.askPlan(text, st.ctx || {})
-      return { thinking: false, ctx: plan.ctx, thread: st.thread.concat(Object.assign({ role: 'ai' }, plan)) }
-    }), 720)
+    const id = crypto.randomUUID()
+    this.setState((st) => ({
+      draft: '', thinking: true,
+      thread: (st.thread || []).concat({ role: 'user', text }, { role: 'ai', id, status: 'previewing' }),
+    }))
+    apiPost('/projects', { prompt: text, dryRun: true }).then((res) => {
+      const r = res || {}
+      this._patch(id, { status: 'preview', plan: r.plan, prompt: text, idemKey: crypto.randomUUID() })
+      this.setState({ thinking: false })
+    }).catch((err) => {
+      const e = err || {}
+      this._patch(id, { status: 'failed', error: { code: e.code || 'network_error', message: e.message || '' } })
+      this.setState({ thinking: false })
+    })
   }
 
-  askPlan(q, ctx) {
-    const low = q.toLowerCase()
-    const filters = []
-    if (/india|gurugram|bengaluru|bangalore|delhi|mumbai/.test(low)) filters.push('Geography: India')
-    if (/north america|united states|\bus\b|usa|europe/.test(low)) filters.push('Geography: North America')
-    if (/e-?commerce/.test(low)) filters.push('Industry: E-commerce')
-    if (/saas|b2b/.test(low)) filters.push('Industry: B2B SaaS')
-    if (/\bai\b/.test(low)) filters.push('Industry: AI')
-    const emp = low.match(/(\d[\d,]*)\s*(?:-|–|to)\s*(\d[\d,]*)/)
-    if (emp) filters.push('Employees: ' + emp[1] + '–' + emp[2])
-    if (/hubspot/.test(low)) filters.push('Tech: HubSpot')
-    if (/salesforce/.test(low)) filters.push('Tech: Salesforce')
-    if (/hiring|hire/.test(low)) filters.push('Signal: Active hiring')
-    if (/funded|funding|series/.test(low)) filters.push('Signal: Recent funding')
-    if (/visit/.test(low)) filters.push('Signal: Website intent')
-    if (/competitor|linkedin|engag|social/.test(low)) filters.push('Signal: Social engagement')
+  start = (id) => {
+    const item = (this.state.thread || []).find((m) => m.id === id)
+    if (!item || item.status !== 'preview') return
+    this._patch(id, { status: 'starting', startError: null })
+    apiPost('/projects', { prompt: item.prompt }, { idempotencyKey: item.idemKey })
+      .then((res) => {
+        const r = res || {}
+        this._patch(id, { status: 'running', projectId: r.project && r.project.id, jobId: r.jobId })
+        this._openEvents(id, r.jobId)
+      })
+      .catch((err) => {
+        const e = err || {}
+        this._patch(id, { status: 'preview', startError: { code: e.code || 'network_error', message: e.message || '' } })
+      })
+  }
 
-    const companies = ctx.companies || 1284
-    const COLS = ['Company', 'Domain', 'Industry', 'Employees', 'ICP Fit', 'Decision Maker', 'Title', 'Email', 'LinkedIn', 'Hiring Signal', 'Website Intent', 'Social Signal', 'Last Signal']
-    const stat = (label, value, color) => ({ label, value, color: color || '#18181B' })
-    const cost = (n) => Math.round(n / 100) * 100
-    let out
-
-    const personAsk = /cmo|cto|cro|cfo|decision maker|leader|head of|founder|director|\bvp\b|people|contact/.test(low)
-    const followUp = !!ctx.companies && (/\btheir\b|^(now|then|also|next)\b/.test(low) || !/compan|brand|account|startup/.test(low))
-
-    if (personAsk && (followUp || !/compan|brand|account|startup/.test(low))) {
-      const people = Math.round(companies * 0.803), verified = Math.round(people * 0.86), c = cost(people * 7)
-      out = { text: 'I found ' + NUM(people) + ' matching decision makers across ' + NUM(companies) + ' companies. ' + NUM(verified) + ' have verified work emails I can pull.',
-        stats: [stat('Decision makers', NUM(people)), stat('Verified emails', NUM(verified), '#15803D'), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Enrich emails', 'Score ICP', 'Only show companies hiring', 'Find buying signals'], credits: c,
-        ctx: { companies, people, label: 'companies · ' + NUM(people) + ' decision makers' } }
-    } else if (/only show|filter|narrow/.test(low) && /hiring|hire/.test(low)) {
-      const n = Math.max(24, Math.round(companies * 0.143)), people = Math.round(n * 0.8), c = cost(n * 3 + people * 7)
-      out = { text: 'I filtered the list to ' + NUM(n) + ' companies with active hiring signals in the last 30 days. Everything else stays in the session if you want it back.',
-        stats: [stat('Companies', NUM(n)), stat('Decision makers', NUM(people)), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Find decision makers', 'Enrich emails', 'Score ICP'], credits: c, ctx: { companies: n, people, label: 'hiring companies' } }
-    } else if (/enrich|email|phone/.test(low)) {
-      const n = ctx.people || companies, c = cost(n * 7)
-      out = { text: 'I can enrich ' + NUM(n) + ' records — work email, direct phone, title, LinkedIn profile and company firmographics. Verification runs before anything is charged.',
-        stats: [stat('Records', NUM(n)), stat('Expected match rate', '86%', '#15803D'), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Score ICP', 'Find buying signals', 'Push to HubSpot'], credits: c, ctx: ctx.companies ? ctx : { companies, people: n } }
-    } else if (/visit/.test(low)) {
-      const c = cost(96 * 10)
-      out = { text: '342 companies visited your site in the last 30 days. 96 match your ICP and 24 are showing high intent across pricing and demo pages.',
-        stats: [stat('Companies', '342'), stat('ICP matches', '96', '#15803D'), stat('High intent', '24', '#EA580C')],
-        actions: ['Find decision makers', 'Enrich emails', 'Create a warm list'], credits: c, ctx: { companies: 342, people: 0, label: 'website visitors' } }
-    } else if (/competitor|engag|linkedin|social/.test(low)) {
-      const c = cost(412 * 7)
-      out = { text: '1,860 social signals landed in the last 30 days. 412 came from people at accounts inside your ICP, including 68 who engaged with competitor content.',
-        stats: [stat('Signals', '1,860'), stat('In-ICP people', '412', '#15803D'), stat('Competitor-engaged', '68', '#EA580C')],
-        actions: ['Find decision makers', 'Enrich emails', 'Create a warm list'], credits: c, ctx: { companies: 412, people: 412, label: 'social signals' } }
-    } else if (/intent|buying signal|signal/.test(low)) {
-      const c = cost(184 * 10)
-      out = { text: '184 accounts are showing buying signals right now — website intent, active hiring, recent funding and competitor engagement, ranked by ICP fit.',
-        stats: [stat('High-intent accounts', '184'), stat('Signals in last 7 days', '642'), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Find decision makers', 'Enrich emails', 'Create a warm list'], credits: c, ctx: { companies: 184, people: 0, label: 'high-intent accounts' } }
-    } else if (/similar|lookalike|best customer/.test(low)) {
-      const c = cost(964 * 3)
-      out = { text: 'I built a lookalike model from your 38 best customers and found 964 close matches, scored on firmographics, tech stack and buying signals.',
-        stats: [stat('Lookalikes', '964'), stat('Close matches', '212', '#15803D'), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Find decision makers', 'Score ICP', 'Only show companies hiring'], credits: c, ctx: { companies: 964, people: 0, label: 'lookalikes' } }
-    } else {
-      const dm = Math.round(companies * 1.64), c = cost(companies * 3 + dm * 7)
-      out = { text: 'I found ' + NUM(companies) + ' potential companies. I can identify decision makers, enrich their contact details, and score them against your ICP.',
-        stats: [stat('Companies', NUM(companies)), stat('Decision makers', '~' + NUM(dm)), stat('Estimated credits', NUM(c), '#5B21B6')],
-        actions: ['Find CMOs', 'Enrich emails', 'Score ICP', 'Find buying signals'], credits: c, ctx: { companies, people: 0, label: 'companies' } }
+  _openEvents = (id, jobId) => {
+    const es = new EventSource(jobEventsUrl(jobId))
+    this._sources.add(es)
+    const drop = () => { this._sources.delete(es) }
+    es.addEventListener('progress', (e) => {
+      try { this._patch(id, { progress: JSON.parse(e.data) }) } catch { /* malformed frame */ }
+    })
+    es.addEventListener('step', (e) => {
+      try { this._patch(id, { step: JSON.parse(e.data) }) } catch { /* malformed frame */ }
+    })
+    es.addEventListener('done', (e) => {
+      drop(); es.close()
+      let data = {}
+      try { data = JSON.parse(e.data) } catch { /* malformed frame */ }
+      if (data.status === 'succeeded') {
+        this._patch(id, { status: 'done', summary: data.summary || {} })
+      } else if (data.error && data.error.code) {
+        this._patch(id, { status: 'failed', error: { code: data.error.code, message: data.error.message || '' } })
+      } else {
+        this._settleFromJob(id, jobId)
+      }
+    })
+    es.onerror = () => {
+      // Transient drops auto-reconnect (the browser sends Last-Event-ID itself).
+      // Only a permanently closed source falls back to one GET /jobs/:id.
+      if (es.readyState === EventSource.CLOSED) {
+        drop()
+        this._settleFromJob(id, jobId)
+      }
     }
-    return Object.assign({ filters, cols: COLS }, out)
+  }
+
+  _settleFromJob = (id, jobId) => {
+    apiGet('/jobs/' + jobId).then((res) => {
+      const j = (res && res.job) || res || {}
+      if (j.status === 'succeeded') {
+        this._patch(id, { status: 'done', summary: j.summary || {} })
+      } else if (j.status === 'failed' || j.status === 'cancelled') {
+        const err = j.error || {}
+        this._patch(id, { status: 'failed', error: { code: err.code || 'unknown_error', message: err.message || '' } })
+      } else {
+        this._patch(id, { status: 'running', progress: j.progress || null })
+      }
+    }).catch((err) => {
+      const e = err || {}
+      this._patch(id, { status: 'failed', error: { code: e.code || 'network_error', message: e.message || '' } })
+    })
   }
 
   askRun = (name, cost) => this.setState(this.closeAll({ runOpen: true, runFor: name, runCost: cost }))
@@ -671,26 +691,41 @@ export class HomeModel extends ModelBase {
 
       hasThread: (s.thread || []).length > 0,
       thinking: s.thinking,
-      threadMeta: (() => {
-        const turns = (s.thread || []).filter((m) => m.role === 'user').length
-        return turns + (turns === 1 ? ' request' : ' requests') + (s.ctx && s.ctx.companies ? ' · context: ' + NUM(s.ctx.companies) + ' ' + (s.ctx.label || 'companies') : '')
-      })(),
-      clearThread: () => { this.clearTimeout(this._think); this.setState({ thread: [], ctx: {}, thinking: false }) },
-      thread: (s.thread || []).map((m, i, arr) => {
-        const ai = m.role === 'ai', last = ai && i === arr.length - 1
+      threadMeta: threadMeta(s.thread || []),
+      clearThread: () => { this._closeSources(); this.setState({ thread: [], thinking: false }) },
+      thread: (s.thread || []).map((m, i) => {
+        const ai = m.role === 'ai'
+        const status = m.status || ''
+        const plan = m.plan
+        const stats = ai ? statsFor(m) : []
+        let text = m.text || ''
+        if (ai) {
+          if (status === 'previewing') text = 'Preparing your search…'
+          else if (status === 'preview' && plan) text = previewText(plan)
+          else if (status === 'starting' || status === 'running') text = plan ? runningText(plan) : 'Starting…'
+          else if (status === 'done') text = doneText(m.summary || {})
+          else if (status === 'failed') text = failedText(m.error && m.error.code, m.error && m.error.message)
+        }
+        const showStart = ai && (status === 'preview' || status === 'starting' || status === 'running')
         return {
-          who: ai ? 'Outmate' : 'You', text: m.text,
+          who: ai ? 'Outmate' : 'You', text,
           avatar: ai ? 'OA' : 'AK',
           avatarStyle: 'flex:none; width:26px; height:26px; border-radius:2px; display:flex; align-items:center; justify-content:center; font-size:9.5px; font-weight:700; ' +
             (ai ? 'background:#EDE9FE; color:#5B21B6' : 'background:#F4F4F5; color:#52525B'),
           rowStyle: 'display:flex; gap:12px; padding:15px' + (i ? '; border-top:1px solid #EFEFF0' : '') + (ai ? '' : '; background:#FCFCFD'),
-          hasFilters: ai && m.filters && m.filters.length > 0, filters: m.filters || [],
-          hasStats: ai && !!m.stats, stats: m.stats || [],
-          hasCols: last, cols: m.cols || [],
-          hasPlan: last,
-          actions: (m.actions || []).map((a) => ({ label: a, pick: () => this.ask(a) })),
-          costNote: ai ? 'Estimated cost ' + NUM(m.credits || 0) + ' credits · ' + NUM(s.credits) + ' available · nothing runs until you confirm' : '',
-          start: () => this.askRun('this research run', m.credits || 0),
+          hasFilters: ai && !!plan, filters: ai && plan ? ['Search: “' + plan.query + '”'] : [],
+          hasStats: stats.length > 0, stats,
+          hasCols: ai && !!plan, cols: plan ? plan.columns.map((c) => c.label) : [],
+          hasPlan: showStart,
+          actions: [],
+          startLabel: status === 'starting' ? 'Starting…' : status === 'running' ? 'Running…' : 'Start research →',
+          startDisabled: status !== 'preview',
+          statusLine: status === 'starting' ? 'Starting…'
+            : status === 'running' && plan ? runningText(plan)
+            : m.startError ? failedText(m.startError.code, m.startError.message)
+            : '',
+          costNote: status === 'preview' ? 'Nothing runs until you confirm.' : '',
+          start: () => this.start(m.id),
         }
       }),
 

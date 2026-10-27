@@ -1,5 +1,7 @@
-"""V1: the public API surface is exactly the nine data-enrichment/job
-endpoints plus ``/health`` — anything missing or extra fails.
+"""V1: the public API surface is exactly the released endpoints plus
+``/health`` — anything missing or extra fails.
+
+HC-1 scope extension adds ``POST /api/v1/projects`` (A14).
 
 Path parameters are normalised to ``{}`` before comparison: the contract
 writes ``{jobId}``/``{runId}`` while FastAPI publishes the declared Python
@@ -21,6 +23,7 @@ EXPECTED = {
     ("GET", "/api/v1/enrichments/catalog"),
     ("POST", "/api/v1/enrichments/runs"),
     ("GET", "/api/v1/enrichments/runs/{}"),
+    ("POST", "/api/v1/projects"),
     ("GET", "/health"),
 }
 

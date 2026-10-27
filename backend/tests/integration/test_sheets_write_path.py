@@ -61,7 +61,8 @@ def test_add_base_rows_dedupes_same_domain(db: Session) -> None:
             {"name": "Acme Two", "domain": "acme.io"},
         ],
     )
-    assert res == {"inserted": 1, "duplicates": 1}
+    assert res["inserted"] == 1 and res["duplicates"] == 1
+    assert len(res["rows"]) == 1
     rows = service.list_rows(db, sheet.id)
     assert len(rows) == 1
     assert rows[0].normalized_domain == "acme.io"
@@ -72,14 +73,15 @@ def test_add_base_rows_dedupes_same_name_no_domain(db: Session) -> None:
     res = service.add_base_rows(
         db, sheet.id, [{"name": "Acme, Inc."}, {"name": "ACME INC"}]
     )
-    assert res == {"inserted": 1, "duplicates": 1}
+    assert res["inserted"] == 1 and res["duplicates"] == 1
+    assert len(res["rows"]) == 1
 
 
 def test_add_base_rows_dedupes_against_existing(db: Session) -> None:
     sheet = _sheet(db)
     service.add_base_rows(db, sheet.id, [{"name": "Acme", "domain": "acme.io"}])
     res = service.add_base_rows(db, sheet.id, [{"name": "Acme2", "domain": "ACME.io"}])
-    assert res == {"inserted": 0, "duplicates": 1}
+    assert res["inserted"] == 0 and res["duplicates"] == 1
 
 
 def test_add_base_rows_distinct_inserted(db: Session) -> None:
@@ -92,7 +94,7 @@ def test_add_base_rows_distinct_inserted(db: Session) -> None:
             {"name": "Beta", "domain": "beta.io"},
         ],
     )
-    assert res == {"inserted": 2, "duplicates": 0}
+    assert res["inserted"] == 2 and res["duplicates"] == 0
 
 
 # ------------------------------------------------------------- add_column

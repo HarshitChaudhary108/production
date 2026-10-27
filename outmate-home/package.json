@@ -13,10 +13,11 @@
     "typecheck": "tsc --noEmit",
     "check": "node scripts/visual/responsive.mjs",
     "api": "node server/mock-api.mjs",
-    "test": "npm run test:api && npm run test:grid",
+    "test": "npm run test:api && npm run test:grid && npm run test:home",
     "test:api": "node --test server/mock-api.test.mjs",
     "test:grid": "node --test scripts/grid.test.mjs",
-    "test:grid:e2e": "node scripts/visual/grid.mjs"
+    "test:grid:e2e": "node scripts/visual/grid.mjs",
+    "test:home": "node --test scripts/research-session.test.mjs"
   },
   "dependencies": {
     "react": "19.2.9",

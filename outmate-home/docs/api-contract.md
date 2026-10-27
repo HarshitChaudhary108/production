@@ -543,3 +543,11 @@ Streams a previously exported file. `:token` is a short-lived download token; no
 ### A12 — Additive fields
 
 Catalog items gain `appliesTo`, `status` and `requiresInputs`. The run request body gains `refresh` and `overwriteEdited`. Row edits gain `expectedRevision`. The run-cells `estimatedOnly` response is `{ "estimatedCredits", "eligibleCells", "skipped" }`. Radar responses carry `preview: true`. Jobs carry `result` objects per job type (see `docs/plan.md` §9).
+
+### A14 — `POST /projects` dry-run + research plan
+
+`POST /projects` accepts `dryRun: boolean` (default `false`).
+
+`dryRun: true` → `200 { "plan": { "query": "...", "requestedCount": 20, "countSource": "prompt" | "default", "requestedRaw": 20 | null, "capped": false, "maxCount": 100, "columns": [ { "key": "company", "label": "Company Name" }, { "key": "domain", "label": "Domain" }, { "key": "emp", "label": "Employee Count" }, { "key": "loc", "label": "Location" } ] } }`. `dryRun: false` → `202 { "project", "jobId", "plan" }` (requires `Idempotency-Key`; `dryRun: true` does not).
+
+Rationale: the browser preview and the actual run use the same server parser, so the count the user sees is the count the job gets.

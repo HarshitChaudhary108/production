@@ -20,6 +20,7 @@ class Project(Base):
     status: Mapped[str | None] = mapped_column(String(32))
     type: Mapped[str | None] = mapped_column(String(64))
     prompt: Mapped[str | None] = mapped_column(Text)
+    agent_id: Mapped[str | None] = mapped_column(String(64))
     tool_ids: Mapped[list[str] | None] = mapped_column(JSONB)
     connector_ids: Mapped[list[str] | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(

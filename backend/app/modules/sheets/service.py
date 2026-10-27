@@ -165,8 +165,9 @@ def _row_key(row_data: dict[str, Any]) -> str | None:
 
 def add_base_rows(
     s: Session, sheet_id: str, rows: Iterable[dict[str, Any]]
-) -> dict[str, int]:
-    """Dedupe by normalized_domain; rows without a domain dedupe by normalized name."""
+) -> dict[str, Any]:
+    """Dedupe by normalized_domain; rows without a domain dedupe by normalized name.
+    ``rows`` in the result are the inserted Row objects (HC-1 per-row sources)."""
     get_sheet(s, sheet_id)
     existing_keys = {
         _row_key(dict(r.data)) for r in s.execute(
@@ -174,7 +175,7 @@ def add_base_rows(
         ).scalars()
     }
     existing_keys.discard(None)
-    inserted = 0
+    inserted_rows: list[Row] = []
     duplicates = 0
     for data in rows:
         key = _row_key(data)
@@ -183,17 +184,20 @@ def add_base_rows(
             continue
         if key is not None:
             existing_keys.add(key)
-        s.add(
-            Row(
-                id=new_id("row"),
-                sheet_id=sheet_id,
-                data=dict(data),
-                normalized_domain=normalized_domain(data.get("domain")),
-            )
+        row = Row(
+            id=new_id("row"),
+            sheet_id=sheet_id,
+            data=dict(data),
+            normalized_domain=normalized_domain(data.get("domain")),
         )
-        inserted += 1
+        s.add(row)
+        inserted_rows.append(row)
     s.flush()
-    return {"inserted": inserted, "duplicates": duplicates}
+    return {
+        "inserted": len(inserted_rows),
+        "duplicates": duplicates,
+        "rows": inserted_rows,
+    }
 
 
 def _slugify(label: str) -> str:

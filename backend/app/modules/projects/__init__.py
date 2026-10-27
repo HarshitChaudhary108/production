@@ -1,1 +1,1 @@
-"""Projects domain (PG-2: the §10 routes live here)."""
+"""Projects module (HC-1: research projects)."""

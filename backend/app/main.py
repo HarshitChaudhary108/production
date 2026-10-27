@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import enrichments as enrichments_api
 from app.api import jobs as jobs_api
 from app.api import me as me_api
+from app.api import projects as projects_api
 from app.config import Settings
 from app.db import make_engine, make_session_factory
 from app.errors import register_error_handlers
@@ -27,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
+        allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
         allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["content-type", "authorization", "idempotency-key"],
     )
@@ -36,6 +38,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(me_api.router, prefix=API_PREFIX)
     app.include_router(jobs_api.router, prefix=API_PREFIX)
     app.include_router(enrichments_api.router, prefix=API_PREFIX)
+    app.include_router(projects_api.router, prefix=API_PREFIX)
 
     @app.get("/health")
     def health() -> dict[str, bool]:

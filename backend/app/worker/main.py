@@ -10,6 +10,7 @@ the ``Executor`` protocol. Items execute inline per worker — concurrency comes
 from multiple workers; ``max_concurrency`` caps the claim batch.
 """
 
+import importlib
 import threading
 import time
 from collections.abc import Mapping
@@ -30,6 +31,7 @@ from app.modules.enrichment.executors.base import (
     ExecError,
     ExecResult,
     Executor,
+    ProviderCallRecord,
     RowSnapshot,
 )
 from app.modules.jobs import queue, service
@@ -48,7 +50,26 @@ from app.modules.providers.moltsets.rate_limit import (
     MoltSetsGate,
     SlotToken,
 )
+from app.modules.research import discover as research_discover
 from app.modules.sheets import service as sheets
+
+# The worker flushes ORM objects across the whole schema (jobs -> workspaces,
+# discover items -> projects/sheets). The API process gets these transitively;
+# the worker must register them explicitly or the first flush crashes with
+# NoReferencedTableError. Mirrors alembic/env.py's _MODEL_MODULES.
+for _model_module in (
+    "app.modules.core.models",
+    "app.modules.sheets.models",
+    "app.modules.jobs.models",
+    "app.modules.credits.models",
+    "app.modules.enrichment.models",
+    "app.modules.providers.models",
+    "app.modules.projects.models",
+    "app.modules.copilot.models",
+    "app.modules.radar.models",
+    "app.modules.exports.models",
+):
+    importlib.import_module(_model_module)
 
 log = get_logger("worker")
 
@@ -112,10 +133,12 @@ class Worker:
         engine: Engine,
         settings: Settings,
         executors: Mapping[str, Executor],
+        research_client: object | None = None,
     ) -> None:
         self._factory = make_session_factory(engine)
         self._settings = settings
         self._executors = executors
+        self._research_client = research_client
         self._pacer = _ProviderPacer(settings.provider_min_interval_ms)
         self._gate = (
             MoltSetsGate(self._factory, settings)
@@ -198,7 +221,66 @@ class Worker:
             raise LookupError(f"item {item.id} lost its job/row/column")
         return job, row, column
 
+    def _process_discover(self, item_id: str, job_id: str) -> None:
+        """HC-1: ``kind="discover"`` -> ``research.discover``. The Exa call
+        runs outside a transaction; the completion goes through the same
+        ``service.complete_item`` transaction as cell items (P2)."""
+        with self._factory() as s:
+            item = s.get(JobItem, item_id)
+            if item is None or item.status != "running":
+                return
+            payload = dict(item.payload or {})
+        records: list[ProviderCallRecord] = []
+        if self._research_client is None:
+            outcome = research_discover.DiscoverOutcome(
+                response=None,
+                error=ExecError(
+                    code="provider_unavailable",
+                    message="Discover search client is not configured.",
+                ),
+            )
+        else:
+            try:
+                response = research_discover.execute(
+                    payload, self._research_client, records
+                )
+                outcome = research_discover.DiscoverOutcome(
+                    response=response, provider_calls=records
+                )
+            except ExaError as exc:
+                res = common.exa_error_result(exc, records)
+                outcome = research_discover.DiscoverOutcome(
+                    response=None,
+                    error=res.error,
+                    provider_calls=res.provider_calls,
+                )
+            except Exception as exc:
+                log.exception("discover crashed", extra={"job_id": job_id})
+                outcome = research_discover.DiscoverOutcome(
+                    response=None,
+                    error=ExecError(code="internal_error", message=str(exc)),
+                    provider_calls=records,
+                )
+        with self._factory() as s:
+            result = service.complete_item(
+                s, item_id, outcome, settings=self._settings
+            )
+            s.commit()
+        if result == "skipped":
+            log.info(
+                "item_skipped lease lost or recovered elsewhere",
+                extra={"job_id": job_id},
+            )
+
     def _process(self, item_id: str, job_id: str) -> None:
+        with self._factory() as s:
+            item = s.get(JobItem, item_id)
+            if item is None:
+                return
+            kind = item.kind
+        if kind == "discover":  # HC-1 kind dispatch
+            self._process_discover(item_id, job_id)
+            return
         with self._factory() as s:
             item = s.get(JobItem, item_id)
             if item is None:
@@ -339,7 +421,14 @@ class Worker:
 def main() -> None:
     settings = Settings()  # type: ignore[call-arg]
     engine = make_engine(settings)
-    worker = Worker(engine, settings, executors=build_executor_map(settings))
+    worker = Worker(
+        engine,
+        settings,
+        executors=build_executor_map(settings),
+        research_client=common.SyncExaClient(
+            ExaClient(settings.exa_api_key.get_secret_value())
+        ),
+    )
     stop = threading.Event()
     try:
         worker.run_forever(stop)

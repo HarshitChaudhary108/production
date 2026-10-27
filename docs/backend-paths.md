@@ -432,3 +432,103 @@ Status values: `planned` (not yet created) · `created` (exists, built in the li
 - **Engineering defaults, not in plan:** client timeout 30 s,
   `max_attempts` 3, backoff base 0.5 s cap 30 s; `slot_backoff_s` 2.0 s;
   `moltsets_max_concurrent` default 3.
+
+### HC-1 — Home research count fix (POST /projects)
+
+- **Route:** `app/api/projects.py` — `POST /api/v1/projects`
+  (`{prompt, agentId?, toolIds?, connectorIds?, enrichments?, dryRun?}`).
+  `dryRun: true` → `200 {plan}`, zero writes, no key needed. Real run:
+  `Idempotency-Key` required (422 without), insert-first in the same
+  transaction (unique `(workspace_id,key)` serializes concurrent
+  duplicates), replay returns stored `{project, jobId, plan}`.
+  Non-empty `enrichments` → 422 `not_supported`
+  (`home_enrichment_not_wired`). A14 in `docs/api-contract.md`.
+- **Parser:** `app/modules/research/parser.py` —
+  `parse_research_request(prompt, settings) -> ResearchPlan`. First
+  number followed within ≤3 intervening words by
+  companies|company|accounts|businesses|startups|brands; intervening
+  words may not be another number or an employee-word (HC-D1). Range
+  ends skipped (prev `-`/`–`/`to`, dash-attached pairs). `0` → 422
+  `count_must_be_positive`. No match → `research_default_count` (25);
+  cap `research_max_count` (100).
+- **Service:** `app/modules/projects/service.py` —
+  `create_research_project(...)`: project (`Live`, `GTM Research`,
+  `prompt[:60]` HC-D5, agent/tool/connector ids stored) → sheet
+  `Target Companies` (kind `companies`; company/domain/emp/loc visible,
+  linkedin/industry hidden, never filled) → `research` job
+  (`progress {done:0,total:requestedCount,unit:"companies"}`,
+  `estimatedCredits=None`, `chargedCredits=0` — HC-D6) + one
+  `kind="discover"` item `{query,requestedCount,capped,sheetId,projectId}`.
+- **Executor:** `app/modules/research/discover.py` —
+  `execute` (Exa `/search` `category:"company"`, `type:"auto"`,
+  `numResults=requestedCount`, `contents:{highlights:true}`, no
+  over-fetch HC-D3); `apply` runs inside the completion transaction:
+  defensive slice, `_row_draft` (normalized_domain, company entity →
+  company/emp/loc), `sheets.add_base_rows` (now returns inserted
+  `rows`), company-column cells `provider_reported`/`exa` + URL source,
+  progress/step events, project `Complete`+`lastRunAt`;
+  `fail_project` → `Draft` (HC-D4).
+- **Dispatch:** `jobs.service.complete_item` checks `item.kind` after
+  the item/job lock — `"discover"` → `_complete_discover_locked`
+  (provider_calls, item result, project state, inline settle with the
+  research `done {status,summary,result}` event) — the same P2
+  completion transaction, not a second path. Worker `_process` branches
+  on `kind`; `_process_discover` uses `research_client`
+  (`SyncExaClient`). `fail_item_final` also routes discover → Draft.
+- **Schema:** migration `0004` adds `projects.agent_id`.
+
+## HC-2 — Home research card (frontend, `outmate-home/`)
+
+- **API client:** `src/lib/api.ts` — `API_BASE =
+  VITE_API_BASE_URL + "/api/v1"`; empty env → every call rejects
+  `ApiError("backend_not_configured")` (never demo data). `apiPost`
+  JSON + optional `Idempotency-Key`, `{error:{code,message,details}}` →
+  `ApiError`; network failure → `ApiError("network_error")`; `apiGet`;
+  `jobEventsUrl(jobId)`.
+- **Pure helpers:** `src/pages/home/researchSession.ts` — no imports,
+  erasable TS (loaded by `node --test` like `gridUtils.ts`):
+  `previewText` (prompt/default/capped), `runningText`, `doneText`
+  (found/requested + duplicate/skipped plurals), `failedText`
+  (provider_out_of_credits/provider_auth/provider_unavailable/
+  network_error/backend_not_configured/validation_error/unknown),
+  `statsFor` (preview → Companies requested; done → Companies found +
+  Requested; never decision-maker/credit tiles), `threadMeta`
+  (`N request(s) · M companies` from latest done item only). All
+  numbers via `toLocaleString()`.
+- **Model:** `src/pages/home/model.ts` — `ask()` dry-run →
+  `previewing → preview|failed` (`thinking` only while in flight);
+  `start(id)` preview-only → `starting → apiPost(prompt, idemKey) →
+  running` + `EventSource(jobEventsUrl)`; progress/step stored; `done`
+  → `done|failed` (failed → one `GET /jobs/:id` for `error.code` when
+  the done payload lacks it); SSE `onerror` → auto-reconnect, only
+  `readyState CLOSED` → one `GET /jobs/:id`. Failed start POST → back
+  to `preview` + `startError` (retry reuses the same `idemKey` — a
+  double click or retry never creates a second project). `_sources`
+  Set; `clearThread` and `dispose()` close all sources. Fake ctx /
+  askPlan / 1284-derived numbers removed; other Home sections
+  untouched.
+- **View:** `HomeView.tsx` — start button `startLabel` /
+  `startDisabled` (`Start research →` / `Starting…` / `Running…`,
+  hidden on done/failed via `hasPlan`), one status line
+  (`statusLine || costNote`), `st.color` fallback.
+- **Tests:** `scripts/research-session.test.mjs` (11 tests, exact
+  strings + grep for `1284`/`askPlan` in model.ts);
+  `npm run test:home`, included in `npm test`. Manual-check drivers:
+  `scripts/hc2-check.mjs`, `hc2-e2e.mjs`, `hc2-edge.mjs` (CDP, real
+  Chrome + live backend; `CHECK_MODE=noenv` for the unconfigured
+  check). `.env.example` documents `VITE_API_BASE_URL=` (empty ⇒
+  backend_not_configured).
+
+### Infra fixes found by the HC-2 manual check
+
+- `app/worker/main.py` now imports all model modules (mirrors
+  `alembic/env.py` `_MODEL_MODULES`) — without them the first
+  `promote_queued` flush crashed with `NoReferencedTableError`
+  (`jobs.workspace_id → workspaces`). Pre-existing latent bug; only
+  visible when a real job queued in a standalone worker process.
+- `SyncExaClient` (executors/common.py) and `SyncMoltSetsClient`
+  (moltsets/client.py) now keep one private event loop per wrapper
+  instead of `asyncio.run` per call — httpx pools bind to the first
+  serving loop, so every second provider call failed with
+  `internal_error: Event loop is closed`. Latent bug for all worker
+  provider calls after the first.

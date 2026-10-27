@@ -85,7 +85,8 @@ class Settings(BaseSettings):
 
     # --- credits / runs (plan §8.3, §8.6, §9; defaults from the plan) ---
     discovery_credits_per_company: int = 2  # until CONFIRM Q2
-    research_default_count: int = 25  # plan-suggested, CONFIRM Q4
+    research_default_count: int = 25
+    research_max_count: int = 100  # plan-suggested, CONFIRM Q4
     run_max_rows: int = 20  # Q4 answered: human confirmed 20 rows/run max
     # PG-8: per-enrichment TTLs (seconds). Empty mapping -> cache fully off
     # (no reads, no writes). e.g. {"find_funding": 3600}.

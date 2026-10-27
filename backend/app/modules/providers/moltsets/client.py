@@ -246,20 +246,29 @@ def _records_in(payload: dict[str, Any], endpoint: str) -> int:
 
 
 class SyncMoltSetsClient:
-    """Sync wrapper: ``asyncio.run`` per call (worker has no loop)."""
+    """Sync wrapper over the async client (worker has no loop).
+
+    A private loop is kept for the wrapper's lifetime rather than
+    ``asyncio.run`` per call: httpx's connection pool binds to the loop
+    that first serves it, so a fresh loop per call leaves pooled
+    connections stranded on a closed loop ("Event loop is closed").
+    """
 
     def __init__(self, client: MoltSetsClient) -> None:
         self._client = client
+        self._loop = asyncio.new_event_loop()
 
     def search_people(self, **kwargs: Any) -> models.PeopleResponse:
-        return asyncio.run(self._client.search_people(**kwargs))
+        return self._loop.run_until_complete(self._client.search_people(**kwargs))
 
     def linkedin_to_business_email(
         self, linkedin_url: str, **kwargs: Any
     ) -> models.EmailResponse:
-        return asyncio.run(
+        return self._loop.run_until_complete(
             self._client.linkedin_to_business_email(linkedin_url, **kwargs)
         )
 
     def search_business_email_by_name(self, **kwargs: Any) -> models.EmailResponse:
-        return asyncio.run(self._client.search_business_email_by_name(**kwargs))
+        return self._loop.run_until_complete(
+            self._client.search_business_email_by_name(**kwargs)
+        )

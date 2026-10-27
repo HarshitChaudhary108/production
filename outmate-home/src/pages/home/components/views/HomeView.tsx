@@ -117,7 +117,7 @@ export function HomeView({ m }: { m: HomeValues }) {
                         <Fragment key={__j}>
                           <span style={S('flex:1; min-width:150px; padding:11px 14px; border-right:1px solid #EFEFF0')}>
                             <span style={S('display:block; font-size:11.5px; color:#71717A')}>{st.label}</span>
-                            <span style={S(`display:block; margin-top:4px; font-size:17px; font-weight:700; color:${st.color}; font-variant-numeric:tabular-nums; letter-spacing:-.01em`)}>{st.value}</span>
+                            <span style={S(`display:block; margin-top:4px; font-size:17px; font-weight:700; color:${st.color || '#18181B'}; font-variant-numeric:tabular-nums; letter-spacing:-.01em`)}>{st.value}</span>
                           </span>
                         </Fragment>
                       ))}
@@ -143,9 +143,9 @@ export function HomeView({ m }: { m: HomeValues }) {
                             <span onClick={a.pick} className="hv2-border-violet" style={S('height:30px; padding:0 11px; display:flex; align-items:center; border:1px solid #D4D4D8; border-radius:3px; background:#FFFFFF; font-size:12.5px; font-weight:600; color:#3F3F46; cursor:pointer; white-space:nowrap')}>{a.label}</span>
                           </Fragment>
                         ))}
-                        <span onClick={mt.start} className="hv2-purple" style={S('margin-left:auto; height:32px; padding:0 14px; display:flex; align-items:center; gap:7px; border:1px solid #6D28D9; background:#6D28D9; border-radius:3px; font-size:13px; font-weight:600; color:#FFFFFF; cursor:pointer; white-space:nowrap')}>Start research →</span>
+                        <span onClick={mt.startDisabled ? undefined : mt.start} className={mt.startDisabled ? '' : 'hv2-purple'} style={S(`margin-left:auto; height:32px; padding:0 14px; display:flex; align-items:center; gap:7px; border:1px solid ${mt.startDisabled ? '#D4D4D8' : '#6D28D9'}; background:${mt.startDisabled ? '#F4F4F5' : '#6D28D9'}; border-radius:3px; font-size:13px; font-weight:600; color:${mt.startDisabled ? '#A1A1AA' : '#FFFFFF'}; cursor:${mt.startDisabled ? 'default' : 'pointer'}; white-space:nowrap`)}>{mt.startLabel}</span>
                       </span>
-                      <span style={S('display:block; margin-top:9px; font-size:12px; color:#A1A1AA; font-variant-numeric:tabular-nums')}>{mt.costNote}</span>
+                      <span style={S('display:block; margin-top:9px; font-size:12px; color:#A1A1AA; font-variant-numeric:tabular-nums')}>{mt.statusLine || mt.costNote}</span>
                     </span>
                   ) : null}
                 </span>
