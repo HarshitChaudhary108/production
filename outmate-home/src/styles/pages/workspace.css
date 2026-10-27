@@ -1,0 +1,44 @@
+body { margin:0; background:#F5F5F7; font-family:Inter, system-ui, -apple-system, sans-serif; color:#18181B; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#6D28D9; text-decoration:none; }
+  a:hover { color:#5B21B6; text-decoration:underline; }
+  input, textarea, button { font-family:inherit; }
+  ::-webkit-scrollbar { width:11px; height:11px; }
+  ::-webkit-scrollbar-thumb { background:#DCDCE2; border-radius:8px; border:3px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:#C6C6CE; border:3px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes pop { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
+  @keyframes slidein { from { opacity:0; transform:translateX(10px) } to { opacity:1; transform:none } }
+  @keyframes bar { 0%,100% { transform:scaleY(.28) } 50% { transform:scaleY(1) } }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+.hv-u45kwi:hover { background:#F4F4F6 !important }
+.hv-u2196y:hover { background:#F1F1F4 !important }
+.hv-1a8qwwd:hover { filter:brightness(.97) !important }
+.hv-u69wm2:hover { background:#F7F7F8 !important }
+.hv-ttjng3:hover { background:#EFE9FB !important }
+.hv-u4v0t1:hover { background:#F5F5F7 !important }
+.hv-1wubm68:hover { background:#E8E8EC !important; color:#52525B !important }
+.hv-ug5na5:hover { background:#FEF2F2 !important }
+.hv-jdi8ic:hover { background:#5B21B6 !important }
+.hv-jj6th:hover { background:#F4F4F6 !important; color:#3F3F46 !important }
+.hv-udcbnc:hover { background:#FAFAFB !important }
+.hv-u2196x:hover { background:#F1F1F3 !important }
+.hv-ugv1h8:hover { background:#FFF1E2 !important }
+.hv-1a8qwtm:hover { filter:brightness(.94) !important }
+.hv-1a8qwrs:hover { filter:brightness(.92) !important }
+.hv-p5cy1p:hover { background:#EDEDF0 !important; color:#3F3F46 !important }
+.hv-q1v9ly:hover { background:#EDEDF0 !important; color:#52525B !important }
+.hv-1jlrkq0:hover { background:#F5F5F7 !important; color:#3F3F46 !important }
+.hv-ugv35u:hover { background:#FFF3E6 !important }
+.hv-fs93b6:hover { background:#000000 !important }
+.hv-u4uxge:hover { background:#F5F1FD !important }
+.hv-iubl1z:hover { border-color:#C9B6F5 !important; color:#5B21B6 !important; background:#FBFAFF !important }
+.hv-vdm6bt:hover { text-decoration-color:#6D28D9 !important }
+.hv-18t8341:hover { color:#6D28D9 !important; text-decoration-color:#6D28D9 !important }
+.hv-1kffbb6:hover { color:#6D28D9 !important }
+.hv-8suzj2:hover { border-color:#0A66C2 !important }
+.hv-16bx3qz:hover { background:#F5F1FD !important; border-color:#DDD6F3 !important }
+.hv-17mkows:hover { border-color:#DDD6F3 !important; background:#FCFBFF !important }
+.hv-lta693:hover { border-color:#DDD6F3 !important }
+.hv-1jqpi6r:hover { color:#5B21B6 !important }

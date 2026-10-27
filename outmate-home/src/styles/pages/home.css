@@ -1,0 +1,36 @@
+body { margin:0; background:#FFFFFF; font-family:Inter, system-ui, -apple-system, sans-serif; color:#18181B; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#5B21B6; text-decoration:none; }
+  a:hover { color:#4C1D95; }
+  ::-webkit-scrollbar { width:9px; height:9px; }
+  ::-webkit-scrollbar-thumb { background:#D9D9DF; border-radius:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  @keyframes pop { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:none; } }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.35 } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+.hv-u2qp3h:hover { background:#F2F2F5 !important }
+.hv-u4v0t1:hover { background:#F5F5F7 !important }
+.hv-5zz9n7:hover { background:#FAF7FF !important; border-color:#B79EEC !important }
+.hv-yaoyuh:hover { background:#F2F2F5 !important; color:#18181B !important }
+.hv-jdi8ic:hover { background:#5B21B6 !important }
+.hv-x0ddlt:hover { border-color:#D4C7F5 !important; background:#FAF7FF !important }
+.hv-lhzfiw:hover { border-color:#D4D4D8 !important }
+.hv-u69wm3:hover { background:#F7F7F9 !important }
+.hv-udcbnc:hover { background:#FAFAFB !important }
+.hv-x2hwvk:hover { border-color:#D4C7F5 !important; background:#FDFCFF !important }
+.hv-bgqo4e:hover { border-color:#6D28D9 !important; color:#5B21B6 !important; background:#FAF7FF !important }
+.hv-q1v9ly:hover { background:#EDEDF0 !important; color:#52525B !important }
+.hv-lhyqd5:hover { border-color:#D4C7F5 !important }
+.hv-1jfh4w6:hover { color:#52525B !important }
+.hv-u45kwi:hover { background:#F4F4F6 !important }
+.hv-3xensl:hover { border-color:#6D28D9 !important; background:#FAF7FF !important }
+.hv2-bg:hover { background:#FAFAFA !important }
+.hv2-bg-f4:hover { background:#F4F4F5 !important }
+.hv2-purple:hover { background:#5B21B6 !important }
+.hv2-border-violet:hover { border-color:#6D28D9 !important; color:#5B21B6 !important }
+.hv2-border-only:hover { border-color:#6D28D9 !important }
+.hv2-border-chip:hover { border-color:#C4B5F0 !important; background:#FAFAFA !important }
+.hv2-border-soft:hover { border-color:#C9C9CF !important }
+.hv2-ink:hover { color:#18181B !important }
+.hv2-gray:hover { color:#52525B !important }
+.hv2-more:hover { background:#EFEFF0 !important; color:#52525B !important }

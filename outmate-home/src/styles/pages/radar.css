@@ -1,0 +1,11 @@
+body { margin:0; background:#FFFFFF; font-family:'IBM Plex Sans', system-ui, sans-serif; color:#18181B; -webkit-font-smoothing:antialiased; }
+  * { box-sizing:border-box; }
+  a { color:#6D28D9; text-decoration:none; }
+  a:hover { color:#5B21B6; }
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background:#E4E4E7; border-radius:8px; }
+.hv-u45kwh:hover { background:#F4F4F5 !important }
+.hv-udcbnb:hover { background:#FAFAFA !important }
+.hv-jdi8ic:hover { background:#5B21B6 !important }
+.hv-1aor8ml:hover { border-color:#C4B5FD !important; background:#FAF8FF !important }
+.hv-1kpeumh:hover { color:#71717A !important }
