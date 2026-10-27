@@ -1,0 +1,10 @@
+.env*
+backend/.testdb/
+__pycache__/
+*.pyc
+.venv/
+outmate_production/
+outmate-home/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
