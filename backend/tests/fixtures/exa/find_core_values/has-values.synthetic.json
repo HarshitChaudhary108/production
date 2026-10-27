@@ -1,0 +1,30 @@
+{
+  "requestId": "fx-cv1",
+  "results": [
+    {
+      "title": "Acme — About us",
+      "url": "https://acme.io/about",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "values": ["Customer-first", "Transparency", "Speed"]
+    },
+    "grounding": [
+      {
+        "field": "values",
+        "citations": [
+          {
+            "url": "https://acme.io/about",
+            "title": "Acme — About us"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ]
+  }
+}

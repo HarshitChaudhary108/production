@@ -1,0 +1,28 @@
+{
+  "requestId": "fx-3",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://news.example/acme-series-b",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "roundName": "Series B",
+      "amountUsd": 28000000,
+      "announcedDate": null,
+      "leadInvestor": null
+    },
+    "grounding": [
+      {
+        "field": "amountUsd",
+        "citations": [],
+        "confidence": "low"
+      }
+    ]
+  }
+}

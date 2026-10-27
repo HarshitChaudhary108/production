@@ -1,0 +1,26 @@
+{
+  "provider": "moltsets",
+  "tool": "linkedin_to_business_email",
+  "synthetic": true,
+  "note": "Hand-written from developer.moltsets.com/openapi.json — NOT a recorded response. The email is fictional.",
+  "request": {
+    "linkedin_url": "https://www.linkedin.com/in/ada-lovelace-example"
+  },
+  "response": {
+    "results": {
+      "email": "ada.lovelace@example.com",
+      "risk_score": "A"
+    },
+    "status": "ok",
+    "metadata": {
+      "tokens_used": 1,
+      "tokens_remaining": 9999,
+      "fair_use": {
+        "records_remaining_5h": 999,
+        "records_reset_5h": "2026-10-27T17:00:00Z",
+        "records_remaining_1w": 9999,
+        "records_reset_1w": "2026-11-03T12:00:00Z"
+      }
+    }
+  }
+}

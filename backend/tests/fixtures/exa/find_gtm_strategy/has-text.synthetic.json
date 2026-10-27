@@ -1,0 +1,28 @@
+{
+  "requestId": "fx-g1",
+  "results": [
+    {
+      "title": "Acme overview",
+      "url": "https://acme.io/",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": "Acme runs a product-led motion with a sales-assisted enterprise tier; the break point is mid-market onboarding.",
+    "grounding": [
+      {
+        "field": "text",
+        "citations": [
+          {
+            "url": "https://acme.io/",
+            "title": "Acme overview"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ]
+  }
+}

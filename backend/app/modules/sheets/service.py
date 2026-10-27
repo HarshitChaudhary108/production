@@ -10,7 +10,9 @@ from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import ColumnElement, String, and_, delete, func, literal, or_, select, values
+from sqlalchemy import column as sa_column
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.errors import ApiError
@@ -40,6 +42,12 @@ def get_sheet(s: Session, sheet_id: str) -> Sheet:
     if sheet is None:
         raise ApiError(404, "not_found", "sheet not found", {"sheetId": sheet_id})
     return sheet
+
+
+def get_column_by_id(s: Session, column_id: str) -> SheetColumn | None:
+    """Look a column up by primary key (deleted columns included — enrichment
+    writes must still resolve the column while a job runs)."""
+    return s.get(SheetColumn, column_id)
 
 
 def get_column(s: Session, sheet_id: str, column_id_or_key: str) -> SheetColumn:
@@ -85,6 +93,20 @@ def list_rows(s: Session, sheet_id: str) -> list[Row]:
 
 def get_cell(s: Session, row_id: str, column_id: str) -> Cell | None:
     return s.get(Cell, (row_id, column_id))
+
+
+def list_cells(
+    s: Session, *, row_ids: Iterable[str], column_ids: Iterable[str]
+) -> list[Cell]:
+    """All cells in the row x column cross product (pre-queue snapshot)."""
+    rid, cid = list(row_ids), list(column_ids)
+    if not rid or not cid:
+        return []
+    return list(
+        s.execute(
+            select(Cell).where(Cell.row_id.in_(rid), Cell.column_id.in_(cid))
+        ).scalars()
+    )
 
 
 def list_cell_sources(s: Session, row_id: str, column_id: str) -> list[CellSource]:
@@ -191,8 +213,11 @@ def add_column(
     hidden: bool = False,
     is_base: bool = False,
     position: int | None = None,
+    key: str | None = None,
 ) -> SheetColumn:
-    """Unique key per sheet: slug of label, suffixed _2, _3… on collision."""
+    """Unique key per sheet: slug of label, suffixed _2, _3… on collision.
+    An explicit ``key`` is used verbatim; a collision then raises
+    422 duplicate_column_key (run requests choose their own keys)."""
     get_sheet(s, sheet_id)
     existing = {
         c.key
@@ -200,12 +225,21 @@ def add_column(
             select(SheetColumn).where(SheetColumn.sheet_id == sheet_id)
         ).scalars()
     }
-    base = _slugify(label)
-    key = base
-    n = 2
-    while key in existing:
-        key = f"{base}_{n}"
-        n += 1
+    if key is not None:
+        if key in existing:
+            raise ApiError(
+                422,
+                "duplicate_column_key",
+                f'Duplicate column key "{key}".',
+                {"key": key},
+            )
+    else:
+        base = _slugify(label)
+        key = base
+        n = 2
+        while key in existing:
+            key = f"{base}_{n}"
+            n += 1
     if position is None:
         position = (
             s.execute(
@@ -321,11 +355,15 @@ def write_enrichment_result(
     cost: int = 0,
     error: dict[str, Any] | None = None,
     fetched_at: datetime | None = None,
+    set_fetched_at: bool = True,
     run_id: str | None = None,
 ) -> Cell | None:
     """Write a provider result to a cell. Skips the write if the cell became
     user_edited while running (result stays in job_items.result, uncharged).
-    Clears stale. Returns None when skipped."""
+    Clears stale. Returns None when skipped.
+
+    ``set_fetched_at=False`` keeps ``fetched_at`` null for non-result writes
+    (e.g. marking a cell ``running`` at claim time)."""
     cell = s.get(Cell, (row_id, column_id))
     if cell is not None and cell.user_edited:
         return None
@@ -340,7 +378,8 @@ def write_enrichment_result(
     cell.confidence_label = confidence_label
     cell.cost = cost
     cell.error = error
-    cell.fetched_at = fetched_at or _utcnow()
+    if set_fetched_at:
+        cell.fetched_at = fetched_at or _utcnow()
     cell.last_run_id = run_id
     cell.stale = False
     cell.revision = (cell.revision or 0) + 1
@@ -421,3 +460,281 @@ def remove_column(s: Session, sheet_id: str, column_id: str) -> SheetColumn:
     col.deleted_at = _utcnow()
     s.flush()
     return col
+
+
+# ------------------------------------------------------------------ run queueing (P5)
+
+
+def queue_cells_for_run(
+    s: Session,
+    *,
+    row_ids: list[str],
+    column_ids: list[str],
+    run_id: str,
+    overwrite_edited: bool,
+) -> list[tuple[str, str]]:
+    """Atomically claim cells for a run: INSERT missing cells as ``pending``,
+    flip eligible existing cells back to ``pending``. Skips (does not touch)
+    cells that are pending/running, or user_edited unless ``overwrite_edited``
+    (prompt1.md D1). Overwritten user_edited cells have the flag cleared so the
+    run takes ownership (§8.4: the cell is only protected while user-owned).
+
+    One INSERT … ON CONFLICT DO UPDATE — a racing run cannot double-queue a
+    cell (P5 prompt: atomic cell update). Returns the queued (row_id,
+    column_id) pairs."""
+    if not row_ids or not column_ids:
+        return []
+    pair_values = values(
+        sa_column("row_id", String), sa_column("column_id", String), name="p"
+    ).data([(r, c) for r in row_ids for c in column_ids])
+    update_where: ColumnElement[bool] = Cell.status.notin_(("pending", "running"))
+    if not overwrite_edited:
+        update_where = and_(update_where, Cell.user_edited.is_(False))
+    stmt = (
+        pg_insert(Cell)
+        .from_select(
+            ["row_id", "column_id", "status", "last_run_id"],
+            select(
+                pair_values.c.row_id,
+                pair_values.c.column_id,
+                literal("pending"),
+                literal(run_id),
+            ),
+        )
+        .on_conflict_do_update(
+            index_elements=["row_id", "column_id"],
+            set_={
+                "status": "pending",
+                "last_run_id": run_id,
+                "user_edited": False,
+                "error": None,
+            },
+            where=update_where,
+        )
+        .returning(Cell.row_id, Cell.column_id)
+    )
+    return [(str(r), str(c)) for r, c in s.execute(stmt).all()]
+
+
+# ------------------------------------------------------------------ signals sheet (P5, plan §8.7)
+
+# N4 answered (human): Signals sheet base columns are the contract Signal
+# fields. Labels match outmate-home SignalsSheet.tsx. freshness/relevance
+# exist as columns but stay null until a scorer exists (contract A5).
+SIGNALS_BASE_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("companyName", "Company"),
+    ("type", "Signal Type"),
+    ("detail", "Signal"),
+    ("source", "Source"),
+    ("detectedAt", "Detected"),
+    ("confidence", "Strength"),
+    ("freshness", "Freshness"),
+    ("relevance", "Buying Relevance"),
+)
+
+_SIGNALS_SHEET_KEY = "signals"
+
+
+def get_or_create_signals_sheet(s: Session, *, project_id: str | None) -> Sheet:
+    """Lazy Signals sheet per project (or global when project_id is null).
+    An advisory lock keyed on the project serializes first creation."""
+    s.execute(
+        select(func.pg_advisory_xact_lock(func.hashtext(f"signals:{project_id or ''}")))
+    )
+    sheet = s.execute(
+        select(Sheet).where(
+            Sheet.kind == "signals",
+            Sheet.project_id.is_(None)
+            if project_id is None
+            else Sheet.project_id == project_id,
+        )
+    ).scalar_one_or_none()
+    if sheet is None:
+        sheet = create_sheet(
+            s, key=_SIGNALS_SHEET_KEY, name="Signals", kind="signals",
+            project_id=project_id,
+        )
+        for key, label in SIGNALS_BASE_COLUMNS:
+            add_column(
+                s, sheet.id, label=label, type="text", is_base=True, key=key
+            )
+    return sheet
+
+
+def upsert_signal_rows(
+    s: Session, *, company_row_id: str, signals: Iterable[dict[str, Any]]
+) -> int:
+    """Insert signal rows linked to a company row (D4 dedupe: same company +
+    type + source + detail is inserted once). ``signals`` dicts carry the
+    contract Signal fields; row.company_row_id is the link (companyId)."""
+    drafts = list(signals)
+    if not drafts:
+        return 0
+    company_row = get_row(s, company_row_id)
+    parent_sheet = get_sheet(s, company_row.sheet_id)
+    sheet = get_or_create_signals_sheet(s, project_id=parent_sheet.project_id)
+    existing = {
+        (r.data.get("type"), r.data.get("source"), r.data.get("detail"))
+        for r in s.execute(
+            select(Row).where(
+                Row.sheet_id == sheet.id, Row.company_row_id == company_row_id
+            )
+        ).scalars()
+    }
+    inserted = 0
+    for d in drafts:
+        key = (d.get("type"), d.get("source"), d.get("detail"))
+        if key in existing:
+            continue
+        s.add(
+            Row(
+                id=new_id("row"),
+                sheet_id=sheet.id,
+                company_row_id=company_row_id,
+                data={
+                    "companyName": d.get("companyName"),
+                    "type": d.get("type"),
+                    "detail": d.get("detail"),
+                    "source": d.get("source"),
+                    "detectedAt": d.get("detectedAt"),
+                    "confidence": d.get("confidence"),
+                    "freshness": d.get("freshness"),
+                    "relevance": d.get("relevance"),
+                },
+            )
+        )
+        existing.add(key)
+        inserted += 1
+    s.flush()
+    return inserted
+
+
+# ------------------------------------------------- leaders sheet (P4b, plan §7.2/PG-4)
+
+# N4 answered (human): Leaders sheet base columns are the contract Leader
+# fields + linkedinUrl — needed for dedupe and for find_work_email's
+# LinkedIn-URL capability. ``initials`` is derived by the UI; ``companyId``
+# is the row.company_row_id link, not a data column.
+LEADERS_BASE_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("name", "Person"),
+    ("title", "Job Title"),
+    ("companyName", "Company"),
+    ("linkedinUrl", "LinkedIn"),
+    ("email", "Work Email"),
+    ("status", "Email Status"),
+    ("persona", "Buying Relevance"),
+    ("seniority", "Seniority"),
+    ("lastActiveAt", "Last Active"),
+)
+
+_LEADERS_SHEET_KEY = "leaders"
+
+
+def get_or_create_leaders_sheet(s: Session, *, project_id: str | None) -> Sheet:
+    """Lazy Leaders sheet per project (or global when project_id is null).
+    An advisory lock keyed on the project serializes first creation —
+    same pattern as the Signals sheet."""
+    s.execute(
+        select(func.pg_advisory_xact_lock(func.hashtext(f"leaders:{project_id or ''}")))
+    )
+    sheet = s.execute(
+        select(Sheet).where(
+            Sheet.kind == "leaders",
+            Sheet.project_id.is_(None)
+            if project_id is None
+            else Sheet.project_id == project_id,
+        )
+    ).scalar_one_or_none()
+    if sheet is None:
+        sheet = create_sheet(
+            s, key=_LEADERS_SHEET_KEY, name="Leaders", kind="leaders",
+            project_id=project_id,
+        )
+        for key, label in LEADERS_BASE_COLUMNS:
+            add_column(
+                s, sheet.id, label=label, type="text", is_base=True, key=key
+            )
+    return sheet
+
+
+def upsert_leader_rows(
+    s: Session, *, company_row_id: str, leaders: Iterable[dict[str, Any]]
+) -> int:
+    """Upsert leader rows linked to a company row (§7.2). D4 dedupe:
+    LinkedIn URL wins; else normalized name + company row. On a match the
+    row's data is REFRESHED in place (idempotent re-runs); on no match a
+    new row is inserted. Returns the number of rows inserted."""
+    drafts = [d for d in leaders if d.get("name") or d.get("linkedinUrl")]
+    if not drafts:
+        return 0
+    company_row = get_row(s, company_row_id)
+    parent_sheet = get_sheet(s, company_row.sheet_id)
+    sheet = get_or_create_leaders_sheet(s, project_id=parent_sheet.project_id)
+    existing = list(
+        s.execute(
+            select(Row).where(
+                Row.sheet_id == sheet.id, Row.company_row_id == company_row_id
+            )
+        ).scalars()
+    )
+    by_linkedin = {
+        (r.data or {}).get("linkedinUrl"): r
+        for r in existing
+        if (r.data or {}).get("linkedinUrl")
+    }
+    by_name = {
+        key: r
+        for r in existing
+        if (key := _leader_name_key((r.data or {}).get("name"))) is not None
+    }
+    inserted = 0
+    for d in drafts:
+        data = {
+            "name": d.get("name"),
+            "title": d.get("title"),
+            "companyName": d.get("companyName"),
+            "linkedinUrl": d.get("linkedinUrl"),
+            "email": d.get("email"),
+            "status": d.get("status"),
+            "persona": d.get("persona"),
+            "seniority": d.get("seniority"),
+            "lastActiveAt": d.get("lastActiveAt"),
+            "companyDomain": d.get("companyDomain"),
+        }
+        match = by_linkedin.get(d.get("linkedinUrl"))
+        if match is None and (
+            nk := _leader_name_key(d.get("name"))
+        ) is not None:
+            match = by_name.get(nk)
+        if match is not None:
+            match.data = {
+                **(match.data or {}),
+                **{k: v for k, v in data.items() if v is not None},
+            }
+            if d.get("linkedinUrl"):
+                by_linkedin[d["linkedinUrl"]] = match
+            if (nk := _leader_name_key(d.get("name"))) is not None:
+                by_name[nk] = match
+            continue
+        row = Row(
+            id=new_id("row"),
+            sheet_id=sheet.id,
+            company_row_id=company_row_id,
+            data=data,
+        )
+        s.add(row)
+        if d.get("linkedinUrl"):
+            by_linkedin[d["linkedinUrl"]] = row
+        if (nk := _leader_name_key(d.get("name"))) is not None:
+            by_name[nk] = row
+        inserted += 1
+    s.flush()
+    return inserted
+
+
+def _leader_name_key(name: Any) -> str | None:
+    """Dedupe name key: normalized (lowercase, alnum-only) so casing and
+    punctuation differences do not produce duplicate leader rows (D4)."""
+    if not isinstance(name, str) or not name:
+        return None
+    return re.sub(r"[^a-z0-9]+", "", name.lower()) or None

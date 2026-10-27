@@ -1,0 +1,60 @@
+{
+  "requestId": "fx-l2",
+  "results": [
+    {
+      "title": "Acme names Jane Doe as VP Sales",
+      "url": "https://news.example/acme-jane",
+      "publishedDate": "2026-09-02T00:00:00Z",
+      "id": "d1"
+    },
+    {
+      "title": "Bob Smith steps down as Acme CTO",
+      "url": "https://news.example/acme-bob",
+      "publishedDate": "2026-08-13T00:00:00Z",
+      "id": "d2"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "changes": [
+        {
+          "person": "Jane Doe",
+          "role": "VP Sales",
+          "type": "hire",
+          "date": "2026-09-01"
+        },
+        {
+          "person": "Bob Smith",
+          "role": "CTO",
+          "type": "departure",
+          "date": "2026-08-12"
+        }
+      ]
+    },
+    "grounding": [
+      {
+        "field": "changes[0].person",
+        "citations": [
+          {
+            "url": "https://news.example/acme-jane",
+            "title": "Acme names Jane Doe as VP Sales"
+          }
+        ],
+        "confidence": "high"
+      },
+      {
+        "field": "changes[1].person",
+        "citations": [
+          {
+            "url": "https://news.example/acme-bob",
+            "title": "Bob Smith steps down as Acme CTO"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ]
+  }
+}

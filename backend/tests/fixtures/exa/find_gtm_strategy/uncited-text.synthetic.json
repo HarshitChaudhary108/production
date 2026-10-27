@@ -1,0 +1,11 @@
+{
+  "requestId": "fx-g2",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": "Acme appears to rely on inbound plus outbound sales.",
+    "grounding": []
+  }
+}

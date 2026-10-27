@@ -1,0 +1,30 @@
+{
+  "requestId": "fx-cv2",
+  "results": [
+    {
+      "title": "Acme review roundup",
+      "url": "https://other.example/acme",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "values": ["Customer-first", "Transparency"]
+    },
+    "grounding": [
+      {
+        "field": "values",
+        "citations": [
+          {
+            "url": "https://other.example/acme",
+            "title": "Acme review roundup"
+          }
+        ],
+        "confidence": "low"
+      }
+    ]
+  }
+}

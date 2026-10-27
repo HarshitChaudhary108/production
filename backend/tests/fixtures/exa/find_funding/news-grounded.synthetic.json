@@ -1,0 +1,33 @@
+{
+  "requestId": "fx-2",
+  "results": [
+    {
+      "title": "Acme raises Series B",
+      "url": "https://news.example/acme-series-b",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "roundName": "Series B",
+      "amountUsd": 28000000,
+      "announcedDate": "2025-03-01",
+      "leadInvestor": "Redpoint"
+    },
+    "grounding": [
+      {
+        "field": "amountUsd",
+        "citations": [
+          {
+            "url": "https://news.example/acme-series-b",
+            "title": "Acme raises Series B"
+          }
+        ],
+        "confidence": "high"
+      }
+    ]
+  }
+}

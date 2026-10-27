@@ -1,0 +1,27 @@
+{
+  "requestId": "fx-1",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://evil-acme.io/",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "Acme",
+          "description": "imposter",
+          "workforce": {
+            "total": 9
+          },
+          "headquarters": {
+            "city": "X",
+            "country": "Y"
+          }
+        }
+      ]
+    }
+  ],
+  "costDollars": {
+    "total": 0.005
+  }
+}

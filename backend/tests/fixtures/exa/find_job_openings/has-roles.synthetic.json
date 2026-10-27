@@ -1,0 +1,31 @@
+{
+  "requestId": "fx-j1",
+  "results": [
+    {
+      "title": "Acme — Careers",
+      "url": "https://acme.io/careers",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "openRoleCount": 12,
+      "gtmRoles": ["Account Executive", "SDR", "Growth Marketing Manager"]
+    },
+    "grounding": [
+      {
+        "field": "openRoleCount",
+        "citations": [
+          {
+            "url": "https://acme.io/careers",
+            "title": "Acme — Careers"
+          }
+        ],
+        "confidence": "high"
+      }
+    ]
+  }
+}

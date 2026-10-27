@@ -1,0 +1,22 @@
+{
+  "requestId": "fx-n2",
+  "results": [
+    {
+      "title": "Widget sales hit record in Q3",
+      "url": "https://blog.example.com/widget-q3",
+      "publishedDate": "2026-10-01T00:00:00Z",
+      "id": "d1",
+      "highlights": ["Widget market grows 10% year over year"]
+    },
+    {
+      "title": "Tacme unveils new logo",
+      "url": "https://design.example.com/tacme-logo",
+      "publishedDate": "2026-09-20T00:00:00Z",
+      "id": "d2",
+      "highlights": ["Tacme, a branding agency, refreshed its identity"]
+    }
+  ],
+  "costDollars": {
+    "total": 0.007
+  }
+}

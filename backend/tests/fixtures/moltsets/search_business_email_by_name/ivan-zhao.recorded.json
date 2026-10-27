@@ -1,0 +1,16 @@
+{
+  "provider": "moltsets",
+  "tool": "search_business_email_by_name",
+  "domain": "notion.so",
+  "recordedAt": "2026-10-27T11:10:15.581307+00:00",
+  "request": {
+    "name": "Ivan Zhao",
+    "company_domain": "notion.so"
+  },
+  "response": {
+    "status": "not_found",
+    "email": null,
+    "risk_score": null,
+    "linkedin_url": null
+  }
+}

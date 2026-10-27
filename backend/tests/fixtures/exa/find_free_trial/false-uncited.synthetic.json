@@ -1,0 +1,20 @@
+{
+  "requestId": "fx-ft3",
+  "results": [
+    {
+      "title": "Acme — Pricing",
+      "url": "https://acme.io/pricing",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "offersFreeTrial": false,
+      "trialLength": null
+    },
+    "grounding": []
+  }
+}

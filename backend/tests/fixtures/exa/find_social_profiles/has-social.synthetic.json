@@ -1,0 +1,22 @@
+{
+  "requestId": "fx-s1",
+  "results": [
+    {
+      "title": "Acme — Build better widgets",
+      "url": "https://acme.io/",
+      "id": "d1",
+      "extras": {
+        "links": [
+          "https://www.linkedin.com/company/acme",
+          "https://x.com/acme",
+          "https://blog.example.com/post-about-acme",
+          "https://acme.io/pricing",
+          "https://x.com/acme"
+        ]
+      }
+    }
+  ],
+  "costDollars": {
+    "total": 0.002
+  }
+}

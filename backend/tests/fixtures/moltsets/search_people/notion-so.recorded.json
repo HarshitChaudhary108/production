@@ -1,0 +1,156 @@
+{
+  "provider": "moltsets",
+  "tool": "search_people",
+  "domain": "notion.so",
+  "recordedAt": "2026-10-27T11:09:48.181094+00:00",
+  "request": {
+    "company_domain": [
+      "notion.so"
+    ],
+    "seniority": [
+      "C Suite",
+      "VP",
+      "Head",
+      "Director",
+      "Owner"
+    ],
+    "limit": 10,
+    "offset": 0
+  },
+  "response": {
+    "status": "ok",
+    "total": 117,
+    "people": [
+      {
+        "full_name": "자경 정",
+        "title": "SCM 팀장",
+        "seniority": "Director",
+        "linkedin_url": "https://linkedin.com/in/자경-정-59bba3213",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-05-09",
+        "company": {
+          "name": "(주)퍼플랩스헬스케어",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Erik Hammer",
+        "title": "Business Owner",
+        "seniority": "C Suite",
+        "linkedin_url": "https://linkedin.com/in/hammererik",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-10-04",
+        "company": {
+          "name": "People Hub",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Yuvraj Rangwani",
+        "title": "Co-Founder",
+        "seniority": "Owner",
+        "linkedin_url": "https://linkedin.com/in/yuvraj-rangwani-b48333247",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-08-12",
+        "company": {
+          "name": "The Student Capital Initiative Dubai",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Maria M.",
+        "title": "Founder And Principal",
+        "seniority": "C Suite",
+        "linkedin_url": "https://linkedin.com/in/maria-m-69a3b5172",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-06-16",
+        "company": {
+          "name": "Cash Flow Ally",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Muslih Durrani",
+        "title": "Founder",
+        "seniority": "Owner",
+        "linkedin_url": "https://linkedin.com/in/muslih-durrani-md10",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-06-17",
+        "company": {
+          "name": "Axoré",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Suhas Sakhamuri",
+        "title": "Founder",
+        "seniority": "Owner",
+        "linkedin_url": "https://linkedin.com/in/suhassakhamuri",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-08-21",
+        "company": {
+          "name": "Atlas",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Anton Wojcik",
+        "title": "Fondateur",
+        "seniority": "Head",
+        "linkedin_url": "https://linkedin.com/in/anton-wojcik-22748527a",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-06-22",
+        "company": {
+          "name": "Arbiter",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Harim Choi",
+        "title": "CEO",
+        "seniority": "C Suite",
+        "linkedin_url": "https://linkedin.com/in/harim-choi-830244226",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-10-05",
+        "company": {
+          "name": "Inpock",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Laura Jacqueline",
+        "title": "Founder",
+        "seniority": "C Suite",
+        "linkedin_url": "https://linkedin.com/in/laurajacqueline",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-09-11",
+        "company": {
+          "name": "Hue and Pastel",
+          "domain": "notion.so"
+        }
+      },
+      {
+        "full_name": "Arville Clores",
+        "title": "Founder",
+        "seniority": "Owner",
+        "linkedin_url": "https://linkedin.com/in/arville-clores-92212471",
+        "business_email": null,
+        "business_email_risk_score": null,
+        "last_updated_at": "2026-04-21",
+        "company": {
+          "name": "Social Rainmakers",
+          "domain": "notion.so"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "requestId": "fx-l4",
+  "results": [
+    {
+      "title": "Acme quarterly update",
+      "url": "https://news.example/acme-q3",
+      "publishedDate": "2026-10-01T00:00:00Z",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "changes": []
+    },
+    "grounding": []
+  }
+}

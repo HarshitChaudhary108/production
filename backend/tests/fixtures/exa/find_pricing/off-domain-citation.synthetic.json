@@ -1,0 +1,32 @@
+{
+  "requestId": "fx-p3",
+  "results": [
+    {
+      "title": "Acme pricing overview",
+      "url": "https://reviews.example/acme-pricing",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "pricingPublished": true,
+      "startingPrice": "$49/seat",
+      "pricingModel": "per-seat subscription"
+    },
+    "grounding": [
+      {
+        "field": "startingPrice",
+        "citations": [
+          {
+            "url": "https://reviews.example/acme-pricing",
+            "title": "Acme pricing overview"
+          }
+        ],
+        "confidence": "low"
+      }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "requestId": "fx-1",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://acme.io/about",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "Acme",
+          "description": "B2B SaaS company",
+          "headquarters": {
+            "city": "London",
+            "country": "UK"
+          }
+        }
+      ]
+    }
+  ],
+  "costDollars": {
+    "total": 0.005
+  }
+}

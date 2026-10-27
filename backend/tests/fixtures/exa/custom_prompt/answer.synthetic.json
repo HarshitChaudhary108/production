@@ -1,0 +1,11 @@
+{
+  "requestId": "fx-cp1",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": "Acme's main differentiation is its real-time scoring engine.",
+    "grounding": []
+  }
+}

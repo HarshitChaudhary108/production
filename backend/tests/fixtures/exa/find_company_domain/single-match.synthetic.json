@@ -1,0 +1,30 @@
+{
+  "requestId": "fx-1",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://www.acme.io/",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "ACME"
+        }
+      ]
+    },
+    {
+      "title": "R",
+      "url": "https://unrelated.example/",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "Other Co"
+        }
+      ]
+    }
+  ],
+  "costDollars": {
+    "total": 0.005
+  }
+}

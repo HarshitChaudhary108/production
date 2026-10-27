@@ -1,0 +1,23 @@
+{
+  "provider": "moltsets",
+  "tool": "linkedin_to_business_email",
+  "synthetic": true,
+  "note": "Hand-written from developer.moltsets.com/openapi.json — NOT a recorded response. A miss is HTTP 200 with status not_found and an empty results object.",
+  "request": {
+    "linkedin_url": "https://www.linkedin.com/in/nobody-here"
+  },
+  "response": {
+    "results": {},
+    "status": "not_found",
+    "metadata": {
+      "tokens_used": 0,
+      "tokens_remaining": 10000,
+      "fair_use": {
+        "records_remaining_5h": 1000,
+        "records_reset_5h": "2026-10-27T17:00:00Z",
+        "records_remaining_1w": 10000,
+        "records_reset_1w": "2026-11-03T12:00:00Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "requestId": "fx-p2",
+  "results": [
+    {
+      "title": "Acme — Contact sales",
+      "url": "https://acme.io/contact",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "pricingPublished": false,
+      "startingPrice": null,
+      "pricingModel": null
+    },
+    "grounding": [
+      {
+        "field": "pricingPublished",
+        "citations": [
+          {
+            "url": "https://acme.io/contact",
+            "title": "Acme — Contact sales"
+          }
+        ],
+        "confidence": "medium"
+      }
+    ]
+  }
+}

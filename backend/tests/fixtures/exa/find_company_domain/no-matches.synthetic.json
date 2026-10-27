@@ -1,0 +1,19 @@
+{
+  "requestId": "fx-1",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://other.io/",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "Other Co"
+        }
+      ]
+    }
+  ],
+  "costDollars": {
+    "total": 0.005
+  }
+}

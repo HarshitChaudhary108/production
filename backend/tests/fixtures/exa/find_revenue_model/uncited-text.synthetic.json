@@ -1,0 +1,11 @@
+{
+  "requestId": "fx-rm1",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": "Subscription — seat-based SaaS pricing.",
+    "grounding": []
+  }
+}

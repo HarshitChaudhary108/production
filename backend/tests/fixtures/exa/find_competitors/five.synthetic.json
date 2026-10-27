@@ -1,0 +1,24 @@
+{
+  "requestId": "fx-c1",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": {
+      "competitors": ["Clay", "Apollo", "ZoomInfo", "Lusha", "Cognism"]
+    },
+    "grounding": [
+      {
+        "field": "competitors",
+        "citations": [
+          {
+            "url": "https://g2.example/acme-alternatives",
+            "title": "Acme alternatives"
+          }
+        ],
+        "confidence": "low"
+      }
+    ]
+  }
+}

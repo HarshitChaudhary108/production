@@ -47,6 +47,9 @@ class JobItem(Base):
     status: Mapped[str] = mapped_column(String(32), server_default="'pending'")
     attempts: Mapped[int] = mapped_column(Integer, server_default="0")
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # P4b: provider-side deferral (429 / gate wait). The item stays
+    # claimable only once this passes; NULL = claimable immediately.
+    available_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     result: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 

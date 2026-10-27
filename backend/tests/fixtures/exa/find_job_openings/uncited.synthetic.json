@@ -1,0 +1,20 @@
+{
+  "requestId": "fx-j2",
+  "results": [
+    {
+      "title": "Acme — Careers",
+      "url": "https://acme.io/careers",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "openRoleCount": 4,
+      "gtmRoles": ["AE"]
+    },
+    "grounding": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "requestId": "fx-n1",
+  "results": [
+    {
+      "title": "Widget sales hit record in Q3",
+      "url": "https://blog.example.com/widget-q3",
+      "publishedDate": "2026-10-01T00:00:00Z",
+      "id": "d1",
+      "highlights": ["Widget market grows 10% year over year"]
+    },
+    {
+      "title": "Acme raises Series B",
+      "url": "https://news.example/acme-series-b",
+      "publishedDate": "2026-09-15T00:00:00Z",
+      "id": "d2",
+      "highlights": ["The B2B SaaS company closed a $28M round led by Redpoint"]
+    }
+  ],
+  "costDollars": {
+    "total": 0.007
+  }
+}

@@ -1,0 +1,201 @@
+{
+  "enrichmentId": "find_snapshot",
+  "domain": "notion.so",
+  "endpoint": "search",
+  "recordedAt": "2026-10-27T09:13:09.043899+00:00",
+  "request": {
+    "query": "notion.so",
+    "type": "auto",
+    "category": "company",
+    "numResults": 3,
+    "includeDomains": [
+      "notion.so"
+    ]
+  },
+  "response": {
+    "requestId": "480377338ee4ea3638dd8dfc8de38477",
+    "results": [
+      {
+        "title": "Notion",
+        "url": "https://www.notion.so/",
+        "publishedDate": null,
+        "author": null,
+        "id": "https://exa.ai/library/organization/stchl1qhzlj",
+        "image": "https://media.licdn.com/dms/image/v2/D4E0BAQGwvcv_1tHZ4w/company-logo_200_200/B4EZW25gE2GgAI-/0/1742530282185/notionhq_logo?e=2147483647&v=beta&t=TjS2vynSBhOF0lA-8mORNZFzuAfpcyYNPU6g90Uq1Ng",
+        "favicon": null,
+        "text": null,
+        "highlights": [],
+        "highlightScores": [],
+        "summary": null,
+        "subpages": [],
+        "entities": [
+          {
+            "id": "https://exa.ai/library/organization/stchl1qhzlj",
+            "type": "company",
+            "version": 1,
+            "properties": {
+              "name": "Notion",
+              "foundedYear": 2016,
+              "description": "Notion blends your everyday work tools into one. Product roadmap? Company wiki? Meeting notes? With Notion, they're all in one place, and totally customizable to meet the needs of any workflow. It's the all-in-one workspace for you, your team, and your whole company. \n\nWe humans are toolmakers by nature, but most of us can't build or modify the software we use every day — arguably our most powerful tool. Our team at Notion is on a mission to make it possible for everyone to shape the tools that shape their lives.",
+              "workforce": {
+                "total": 7211
+              },
+              "headquarters": {
+                "address": "San Francisco, California 94110, US",
+                "city": "San Francisco",
+                "postalCode": null,
+                "country": "United States"
+              },
+              "financials": {
+                "revenueAnnual": 500000000,
+                "fundingTotal": 605000000,
+                "fundingLatestRound": {
+                  "name": "Secondary market",
+                  "date": "2026-01-01",
+                  "amount": 270000000
+                }
+              },
+              "webTraffic": null,
+              "research": null
+            }
+          }
+        ],
+        "extras": null
+      },
+      {
+        "title": "Notion AI",
+        "url": "https://www.notion.so/product/ai",
+        "publishedDate": null,
+        "author": null,
+        "id": "https://exa.ai/library/organization/xlmbc2vqjgc",
+        "image": "https://media.licdn.com/dms/image/v2/C560BAQHzcaUoQefMCw/company-logo_200_200/company-logo_200_200/0/1631348410910?e=2147483647&v=beta&t=qWmI7C-lf4q-LX2d6l_KsIXu02XXIZn9Y1mIwLQIl2c",
+        "favicon": null,
+        "text": null,
+        "highlights": [],
+        "highlightScores": [],
+        "summary": null,
+        "subpages": [],
+        "entities": [
+          {
+            "id": "https://exa.ai/library/organization/xlmbc2vqjgc",
+            "type": "company",
+            "version": 1,
+            "properties": {
+              "name": "Notion AI",
+              "foundedYear": 2013,
+              "description": "Notion reimagines your email experience using thoughtfully-applied intelligence while constantly adapting to you. Notion learns how you do time-consuming stuff, like managing your inbox, and relieves your burden. From your history, new insightful relationship and conversation information is unleashed by Notion for the first time.\n\nLearn more at www.notion.ai.",
+              "workforce": {
+                "total": 5
+              },
+              "headquarters": {
+                "address": "212 S 5th Avenue, Ann Arbor, MI 48104, US",
+                "city": "Ann Arbor",
+                "postalCode": null,
+                "country": "United States"
+              },
+              "financials": {
+                "revenueAnnual": 2500000,
+                "fundingTotal": null,
+                "fundingLatestRound": {
+                  "name": "Pre seed",
+                  "date": "2020-02-28",
+                  "amount": null
+                }
+              },
+              "webTraffic": {
+                "visitsMonthly": 0,
+                "countryRank": 396263,
+                "avgDurationSeconds": 0,
+                "history": [
+                  {
+                    "value": 3099,
+                    "dateFrom": "2026-04",
+                    "dateTo": "2026-04"
+                  },
+                  {
+                    "value": 863,
+                    "dateFrom": "2026-05",
+                    "dateTo": "2026-05"
+                  },
+                  {
+                    "value": 3649,
+                    "dateFrom": "2026-06",
+                    "dateTo": "2026-06"
+                  },
+                  {
+                    "value": 3284,
+                    "dateFrom": "2026-07",
+                    "dateTo": "2026-07"
+                  },
+                  {
+                    "value": 629,
+                    "dateFrom": "2026-08",
+                    "dateTo": "2026-08"
+                  },
+                  {
+                    "value": 0,
+                    "dateFrom": "2026-10",
+                    "dateTo": "2026-10"
+                  }
+                ]
+              },
+              "research": null
+            }
+          }
+        ],
+        "extras": null
+      },
+      {
+        "title": "Notion Labs",
+        "url": "https://notion.so/product",
+        "publishedDate": null,
+        "author": null,
+        "id": "https://exa.ai/library/organization/39q273sq5qs",
+        "image": "https://static.licdn.com/aero-v1/sc/h/cs8pjfgyw96g44ln9r7tct85f",
+        "favicon": null,
+        "text": null,
+        "highlights": [],
+        "highlightScores": [],
+        "summary": null,
+        "subpages": [],
+        "entities": [
+          {
+            "id": "https://exa.ai/library/organization/39q273sq5qs",
+            "type": "company",
+            "version": 1,
+            "properties": {
+              "name": "Notion Labs",
+              "foundedYear": null,
+              "description": null,
+              "workforce": {
+                "total": 288
+              },
+              "headquarters": {
+                "address": "Denver, Colorado, United States",
+                "city": "Denver",
+                "postalCode": null,
+                "country": "United States"
+              },
+              "financials": null,
+              "webTraffic": null,
+              "research": null
+            }
+          }
+        ],
+        "extras": null
+      }
+    ],
+    "costDollars": {
+      "total": 0.007,
+      "search": {
+        "neural": 0.007
+      }
+    },
+    "searchTime": 1578.1,
+    "warnings": [],
+    "notices": [],
+    "output": null,
+    "statuses": [],
+    "resolvedSearchType": ""
+  }
+}

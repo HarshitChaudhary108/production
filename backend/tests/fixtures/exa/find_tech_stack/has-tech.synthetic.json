@@ -1,0 +1,13 @@
+{
+  "requestId": "fx-t1",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": {
+      "technologies": ["React", "PostgreSQL", "AWS"]
+    },
+    "grounding": []
+  }
+}

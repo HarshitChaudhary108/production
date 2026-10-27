@@ -37,6 +37,11 @@ def test_upgrade_head_creates_all_tables(engine: Engine, migrated: None) -> None
 
 
 def test_downgrade_base_drops_all_tables(engine: Engine, migrated: None) -> None:
+    # The seed downgrade deletes ws_demo; other tests may have committed rows
+    # that FK-reference it (demo sheet, jobs, idempotency_keys, ...). Wipe all
+    # data first so the lifecycle check is about DDL, not residual test data.
+    with engine.begin() as conn:
+        conn.execute(text("TRUNCATE workspaces CASCADE"))
     command.downgrade(alembic_cfg(), "base")
     try:
         remaining = set(inspect(engine).get_table_names())

@@ -1,0 +1,38 @@
+{
+  "requestId": "fx-l1",
+  "results": [
+    {
+      "title": "Acme names Jane Doe as VP Sales",
+      "url": "https://news.example/acme-jane",
+      "publishedDate": "2026-09-02T00:00:00Z",
+      "id": "d1"
+    }
+  ],
+  "costDollars": {
+    "total": 0.01
+  },
+  "output": {
+    "content": {
+      "changes": [
+        {
+          "person": "Jane Doe",
+          "role": "VP Sales",
+          "type": "hire",
+          "date": "2026-09-01"
+        }
+      ]
+    },
+    "grounding": [
+      {
+        "field": "changes[0].person",
+        "citations": [
+          {
+            "url": "https://news.example/acme-jane",
+            "title": "Acme names Jane Doe as VP Sales"
+          }
+        ],
+        "confidence": "high"
+      }
+    ]
+  }
+}

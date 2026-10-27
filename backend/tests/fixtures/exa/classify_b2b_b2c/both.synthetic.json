@@ -1,0 +1,13 @@
+{
+  "requestId": "fx-b1",
+  "results": [],
+  "costDollars": {
+    "total": 0.012
+  },
+  "output": {
+    "content": {
+      "model": "Both"
+    },
+    "grounding": []
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "requestId": "fx-li2",
+  "results": [
+    {
+      "title": "Jane Doe — VP Sales at Acme",
+      "url": "https://www.linkedin.com/in/jane-doe",
+      "id": "d1",
+      "highlights": ["VP Sales at Acme"]
+    },
+    {
+      "title": "Acme posts on LinkedIn",
+      "url": "https://www.linkedin.com/posts/acme-launch",
+      "id": "d2",
+      "highlights": ["Acme product launch"]
+    }
+  ],
+  "costDollars": {
+    "total": 0.007
+  }
+}

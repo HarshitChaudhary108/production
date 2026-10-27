@@ -1,0 +1,15 @@
+{
+  "provider": "moltsets",
+  "tool": "linkedin_to_business_email",
+  "domain": "notion.so",
+  "recordedAt": "2026-10-27T11:10:08.406916+00:00",
+  "request": {
+    "linkedin_url": "https://linkedin.com/in/hammererik"
+  },
+  "response": {
+    "status": "not_found",
+    "email": null,
+    "risk_score": null,
+    "linkedin_url": null
+  }
+}

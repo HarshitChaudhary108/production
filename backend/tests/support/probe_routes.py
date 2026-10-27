@@ -1,6 +1,8 @@
 """Routes mounted only in tests, never in app code.
 
-- ``/__test/*``: exercise the error envelope (P0).
+``/__test/*`` probes exercise the error envelope (P0): a deliberate ApiError
+and a pydantic-validated echo. Replaces the probe half of the retired
+test_routes.py (the run routes it hosted are real app routes since P5).
 """
 
 from fastapi import APIRouter

@@ -1,0 +1,26 @@
+{
+  "requestId": "fx-1",
+  "results": [
+    {
+      "title": "R",
+      "url": "https://acme.io/",
+      "id": "d1",
+      "entities": [
+        {
+          "type": "company",
+          "name": "Acme",
+          "financials": {
+            "fundingLatestRound": {
+              "name": "Series B",
+              "date": "2025-03-01",
+              "amount": 28000000
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "costDollars": {
+    "total": 0.005
+  }
+}
